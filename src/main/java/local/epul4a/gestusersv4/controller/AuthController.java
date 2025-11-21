@@ -15,7 +15,7 @@ import java.util.List;
 
 @Controller
 public class AuthController {
-    private UserService userService;
+    private final UserService userService;
 
     public AuthController(UserService userService) {
         this.userService = userService;
@@ -32,7 +32,7 @@ public class AuthController {
     }
 
     // handler method to handle user registration request
-    @GetMapping("register")
+    @GetMapping("/register")
     public String showRegistrationForm(Model model) {
         UserDto user = new UserDto();
         model.addAttribute("user", user);
@@ -46,7 +46,7 @@ public class AuthController {
                                Model model) {
         User existing = userService.findByEmail(user.getEmail());
         if (existing != null) {
-            result.rejectValue("email", null, "Il y a déjà un compte enregistré avec cet email");
+            result.rejectValue("email", "", "Il y a déjà un compte enregistré avec cet email");
         }
         if (result.hasErrors()) {
             model.addAttribute("user", user);
@@ -60,12 +60,6 @@ public class AuthController {
     public String listRegisteredUsers(Model model) {
         List<UserDto> users = userService.findAllUsers();
         model.addAttribute("users", users);
-        return "users";
-    }
-
-    // handler method to handle login request
-    @GetMapping("/login")
-    public String login(){
-        return "login";
+        return "userList";
     }
 }
