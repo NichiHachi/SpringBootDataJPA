@@ -1,4 +1,4 @@
-package local.epul4a.springbootdatajpa.form;
+package local.epul4a.gestusers.form;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

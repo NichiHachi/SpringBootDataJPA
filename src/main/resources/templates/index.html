@@ -1,14 +1,28 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" />
-    <title>Bienvenue</title>
-    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+    <title>Users</title>
 </head>
 <body>
-<h1>Bienvenue</h1>
-<!--/*@thymesVar id="message" type="java"*/-->
-<h2 th:utext="${message}">..!..</h2>
-<a th:href="@{/users}">Gérer les Utilisateurs</a>
+<h1>Users</h1>
+<table>
+    <tr>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Roles</th>
+    </tr>
+    <tr th:each="user : ${users}">
+        <td th:text="${user.username}"></td>
+        <td th:text="${user.email}"></td>
+        <td th:text="${user.roles}"></td>
+    </tr>
+</table>
+<form action="/addUser" method="post">
+    <input type="text" name="username" placeholder="Username">
+    <input type="password" name="password" placeholder="Password">
+    <input type="email" name="email" placeholder="Email">
+    <input type="text" name="roleName" placeholder="Role (user/admin)">
+    <button type="submit">Add User</button>
+</form>
 </body>
 </html>
