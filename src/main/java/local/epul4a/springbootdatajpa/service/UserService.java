@@ -1,4 +1,4 @@
-package local.epul4a.demosbt.service;
+package local.epul4a.springbootdatajpa.service;
 
 import local.epul4a.demosbt.model.User;
 import org.springframework.stereotype.Service;

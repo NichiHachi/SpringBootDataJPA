@@ -1,9 +1,9 @@
-package local.epul4a.demosbt.controller;
+package local.epul4a.springbootdatajpa.controller;
 
 import jakarta.validation.Valid;
-import local.epul4a.demosbt.form.UserForm;
-import local.epul4a.demosbt.model.User;
-import local.epul4a.demosbt.service.UserService;
+import local.epul4a.springbootdatajpa.form.UserForm;
+import local.epul4a.springbootdatajpa.model.User;
+import local.epul4a.springbootdatajpa.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

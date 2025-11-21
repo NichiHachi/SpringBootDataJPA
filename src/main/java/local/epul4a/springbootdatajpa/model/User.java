@@ -1,4 +1,4 @@
-package local.epul4a.demosbt.model;
+package local.epul4a.springbootdatajpa.model;
 
 import java.time.LocalDate;
 
