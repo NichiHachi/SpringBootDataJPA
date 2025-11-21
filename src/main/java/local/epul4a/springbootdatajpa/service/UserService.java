@@ -1,6 +1,6 @@
 package local.epul4a.springbootdatajpa.service;
 
-import local.epul4a.demosbt.model.User;
+import local.epul4a.springbootdatajpa.model.User;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
