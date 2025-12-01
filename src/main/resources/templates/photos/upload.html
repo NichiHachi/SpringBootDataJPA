@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Uploader une photo')}">
+    <title></title>Uploader une photo - FotoShare</title>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+    <!-- Navigation -->
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <!-- Main Content -->
+    <div class="container py-5 flex-grow-1">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a th:href="@{/}">Accueil</a></li>
+                        <li class="breadcrumb-item"><a th:href="@{/photos/my}">Mes Photos</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Uploader</li>
+                    </ol>
+                </nav>
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="bi bi-cloud-upload me-2"></i>Uploader une nouvelle photo
+                        </h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Error message -->
+                        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <span th:text="${errorMessage}"></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+
+                        <form th:action="@{/photos/upload}" 
+                              th:object="${photoUploadDTO}" 
+                              method="post" 
+                              enctype="multipart/form-data"
+                              id="uploadForm">
+                            
+                            <!-- File Upload Area -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Image <span class="text-danger">*</span></label>
+                                <div class="upload-area" id="uploadArea" onclick="document.getElementById('file').click();">
+                                    <i class="bi bi-cloud-arrow-up-fill mb-3"></i>
+                                    <h5>Glissez votre image ici</h5>
+                                    <p class="text-muted mb-2">ou cliquez pour sélectionner</p>
+                                    <small class="text-muted">Formats acceptés: JPEG, PNG, GIF, WebP • Max 10 MB</small>
+                                </div>
+                                <input type="file" 
+                                       th:field="*{file}" 
+                                       id="file" 
+                                       accept="image/jpeg,image/png,image/gif,image/webp" 
+                                       class="d-none"
+                                       required>
+                                <div th:if="${#fields.hasErrors('file')}" class="text-danger small mt-2">
+                                    <span th:errors="*{file}"></span>
+                                </div>
+
+                                <!-- Preview -->
+                                <div class="preview-container" id="previewContainer">
+                                    <div class="text-center">
+                                        <img id="imagePreview" src="" alt="Preview" class="preview-image">
+                                    </div>
+                                    <div class="file-info d-flex justify-content-between align-items-center">
+                                        <span id="fileName"></span>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearFile()">
+                                            <i class="bi bi-x-lg"></i> Supprimer
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Title -->
+                            <div class="mb-3">
+                                <label for="title" class="form-label fw-bold">Titre <span class="text-danger">*</span></label>
+                                <input type="text" 
+                                       th:field="*{title}" 
+                                       class="form-control" 
+                                       id="title" 
+                                       placeholder="Donnez un titre à votre photo"
+                                       th:classappend="${#fields.hasErrors('title')} ? 'is-invalid' : ''"
+                                       required>
+                                <div th:if="${#fields.hasErrors('title')}" class="invalid-feedback">
+                                    <span th:errors="*{title}"></span>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-3">
+                                <label for="description" class="form-label fw-bold">Description</label>
+                                <textarea th:field="*{description}" 
+                                          class="form-control" 
+                                          id="description" 
+                                          rows="3" 
+                                          placeholder="Ajoutez une description (optionnel)"
+                                          th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"></textarea>
+                                <div th:if="${#fields.hasErrors('description')}" class="invalid-feedback">
+                                    <span th:errors="*{description}"></span>
+                                </div>
+                            </div>
+
+                            <!-- Visibility -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Visibilité</label>
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <div class="form-check card p-3 h-100">
+                                            <input class="form-check-input" 
+                                                   type="radio" 
+                                                   th:field="*{visibility}" 
+                                                   th:value="'PRIVATE'" 
+                                                   id="visibilityPrivate">
+                                            <label class="form-check-label w-100" for="visibilityPrivate">
+                                                <i class="bi bi-lock-fill text-secondary me-2"></i>
+                                                <strong>Privée</strong>
+                                                <p class="text-muted small mb-0 mt-1">Visible uniquement par vous et les personnes avec qui vous partagez</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-check card p-3 h-100">
+                                            <input class="form-check-input" 
+                                                   type="radio" 
+                                                   th:field="*{visibility}" 
+                                                   th:value="'PUBLIC'" 
+                                                   id="visibilityPublic">
+                                            <label class="form-check-label w-100" for="visibilityPublic">
+                                                <i class="bi bi-globe text-success me-2"></i>
+                                                <strong>Publique</strong>
+                                                <p class="text-muted small mb-0 mt-1">Visible par tout le monde dans la galerie publique</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Album (optional) -->
+                            <div class="mb-4" th:if="${albums != null and !albums.isEmpty()}">
+                                <label for="albumId" class="form-label fw-bold">Ajouter à un album</label>
+                                <select th:field="*{albumId}" class="form-select" id="albumId">
+                                    <option value="">-- Aucun album --</option>
+                                    <option th:each="album : ${albums}" 
+                                            th:value="${album.id}" 
+                                            th:text="${album.name}">Album</option>
+                                </select>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Vous pouvez aussi ajouter cette photo à un album plus tard.
+                                </div>
+                            </div>
+
+                            <!-- Submit buttons -->
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                <a th:href="@{/photos/my}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-1"></i>Annuler
+                                </a>
+                                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                    <i class="bi bi-cloud-upload me-2"></i>Uploader
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tips Card -->
+                <div class="card mt-4 border-0 bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title"><i class="bi bi-lightbulb text-warning me-2"></i>Conseils</h6>
+                        <ul class="small text-muted mb-0">
+                            <li>Les photos sont automatiquement redimensionnées pour créer des miniatures.</li>
+                            <li>Vous pouvez partager des photos privées avec des utilisateurs spécifiques.</li>
+                            <li>Les photos publiques apparaissent dans la galerie et peuvent être vues par tous.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+    
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('file');
+        const previewContainer = document.getElementById('previewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const fileName = document.getElementById('fileName');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Drag and drop handlers
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+        });
+
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFiles(files);
+            }
+        }
+
+        // File input change handler
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                
+                // Check file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Veuillez sélectionner une image valide.');
+                    clearFile();
+                    return;
+                }
+
+                // Check file size (10MB max)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('Le fichier est trop volumineux. Taille maximale: 10 MB');
+                    clearFile();
+                    return;
+                }
+
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    previewContainer.classList.add('show');
+                    uploadArea.style.display = 'none';
+                    
+                    // Display file info
+                    const size = (file.size / 1024 / 1024).toFixed(2);
+                    fileName.innerHTML = `<i class="bi bi-image me-2"></i><strong>${file.name}</strong> (${size} MB)`;
+                };
+                reader.readAsDataURL(file);
+
+                // Auto-fill title from filename if empty
+                const titleInput = document.getElementById('title');
+                if (!titleInput.value) {
+                    const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+                    titleInput.value = nameWithoutExt.replace(/[-_]/g, ' ');
+                }
+            }
+        }
+
+        function clearFile() {
+            fileInput.value = '';
+            imagePreview.src = '';
+            previewContainer.classList.remove('show');
+            uploadArea.style.display = 'block';
+        }
+
+        // Form submission loading state
+        document.getElementById('uploadForm').addEventListener('submit', function() {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Upload en cours...';
+        });
+    </script>
+    
+    <style>
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .upload-area i {
+            font-size: 3rem;
+            color: #667eea;
+        }
+        .preview-container {
+            display: none;
+            margin-top: 20px;
+        }
+        .preview-container.show {
+            display: block;
+        }
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .file-info {
+            background: #e7f1ff;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-top: 15px;
+        }
+    </style>
+</body>
+</html>

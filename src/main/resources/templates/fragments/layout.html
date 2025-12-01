@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<!-- ============================================= -->
+<!-- HEAD FRAGMENT -->
+<!-- ============================================= -->
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FotoShare - Application de Partage de Photos Sécurisée">
+    <title th:text="${title} + ' - FotoShare'">FotoShare</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+
+<!-- ============================================= -->
+<!-- NAVBAR FRAGMENT -->
+<!-- ============================================= -->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+        <!-- Brand -->
+        <a class="navbar-brand d-flex align-items-center" th:href="@{/}">
+            <i class="bi bi-camera-fill me-2"></i>
+            <span class="fw-bold">FotoShare</span>
+        </a>
+        
+        <!-- Mobile toggle button -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <!-- Navigation links -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}">
+                        <i class="bi bi-house-door me-1"></i>Accueil
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/gallery}">
+                        <i class="bi bi-images me-1"></i>Galerie
+                    </a>
+                </li>
+                
+                <!-- Authenticated user links -->
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" th:href="@{/photos/my}">
+                        <i class="bi bi-image me-1"></i>Mes Photos
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" th:href="@{/albums}">
+                        <i class="bi bi-folder me-1"></i>Mes Albums
+                    </a>
+                </li>
+                
+                <!-- Admin link -->
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin}">
+                        <i class="bi bi-gear me-1"></i>Admin
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- User actions -->
+            <ul class="navbar-nav">
+                <!-- Authenticated user dropdown -->
+                <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <span sec:authentication="name">Utilisateur</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li>
+                            <a class="dropdown-item" th:href="@{/photos/upload}">
+                                <i class="bi bi-cloud-upload me-2"></i>Uploader une photo
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" th:href="@{/albums/create}">
+                                <i class="bi bi-folder-plus me-2"></i>Créer un album
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" th:href="@{/photos/shared}">
+                                <i class="bi bi-share me-2"></i>Partagées avec moi
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post">
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Déconnexion
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+                
+                <!-- Login/Register for anonymous users -->
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="nav-link" th:href="@{/login}">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Connexion
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="btn btn-outline-light btn-sm ms-2" th:href="@{/register}">
+                        <i class="bi bi-person-plus me-1"></i>Inscription
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- ============================================= -->
+<!-- ALERTS FRAGMENT -->
+<!-- ============================================= -->
+<div th:fragment="alerts" class="container mt-3">
+    <!-- Success message -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    
+    <!-- Error message -->
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    
+    <!-- Warning message -->
+    <div th:if="${warningMessage}" class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-circle me-2"></i>
+        <span th:text="${warningMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    
+    <!-- Info message -->
+    <div th:if="${infoMessage}" class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="bi bi-info-circle me-2"></i>
+        <span th:text="${infoMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- FOOTER FRAGMENT -->
+<!-- ============================================= -->
+<footer th:fragment="footer" class="bg-dark text-white py-4 mt-auto">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h5><i class="bi bi-camera-fill me-2"></i>FotoShare</h5>
+                <p class="text-muted small">Application de partage de photos sécurisée.</p>
+            </div>
+            <div class="col-md-3">
+                <h6>Liens</h6>
+                <ul class="list-unstyled small">
+                    <li><a th:href="@{/}" class="text-muted text-decoration-none">Accueil</a></li>
+                    <li><a th:href="@{/gallery}" class="text-muted text-decoration-none">Galerie</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h6>Compte</h6>
+                <ul class="list-unstyled small">
+                    <li sec:authorize="!isAuthenticated()">
+                        <a th:href="@{/login}" class="text-muted text-decoration-none">Connexion</a>
+                    </li>
+                    <li sec:authorize="!isAuthenticated()">
+                        <a th:href="@{/register}" class="text-muted text-decoration-none">Inscription</a>
+                    </li>
+                    <li sec:authorize="isAuthenticated()">
+                        <a th:href="@{/photos/my}" class="text-muted text-decoration-none">Mes Photos</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <hr class="my-3 border-secondary">
+        <p class="text-center text-muted small mb-0">&copy; 2024 FotoShare. Tous droits réservés.</p>
+    </div>
+</footer>
+
+<!-- ============================================= -->
+<!-- SCRIPTS FRAGMENT -->
+<!-- ============================================= -->
+<th:block th:fragment="scripts">
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</th:block>
+
+<!-- ============================================= -->
+<!-- PAGINATION FRAGMENT -->
+<!-- ============================================= -->
+<nav th:fragment="pagination(currentPage, totalPages, baseUrl)" aria-label="Navigation des pages" th:if="${totalPages > 1}">
+    <ul class="pagination pagination-lg justify-content-center">
+        <!-- First Page -->
+        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+            <a class="page-link" th:href="@{${baseUrl}(page=0)}">
+                <i class="bi bi-chevron-double-left"></i>
+            </a>
+        </li>
+        
+        <!-- Previous Page -->
+        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+            <a class="page-link" th:href="@{${baseUrl}(page=${currentPage - 1})}">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+        
+        <!-- Page Numbers -->
+        <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+            <li class="page-item" 
+                th:if="${i == 0 or i == totalPages - 1 or (i >= currentPage - 2 and i <= currentPage + 2)}"
+                th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link" th:href="@{${baseUrl}(page=${i})}" th:text="${i + 1}">1</a>
+            </li>
+            <li class="page-item disabled" th:if="${i == currentPage - 3 or i == currentPage + 3}">
+                <span class="page-link">...</span>
+            </li>
+        </th:block>
+        
+        <!-- Next Page -->
+        <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+            <a class="page-link" th:href="@{${baseUrl}(page=${currentPage + 1})}">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+        
+        <!-- Last Page -->
+        <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+            <a class="page-link" th:href="@{${baseUrl}(page=${totalPages - 1})}">
+                <i class="bi bi-chevron-double-right"></i>
+            </a>
+        </li>
+    </ul>
+    
+    <p class="text-center text-muted mt-2">
+        Page <span th:text="${currentPage + 1}">1</span> sur <span th:text="${totalPages}">1</span>
+    </p>
+</nav>
+
+<!-- ============================================= -->
+<!-- PHOTO CARD FRAGMENT -->
+<!-- ============================================= -->
+<div th:fragment="photoCard(photo)" class="card photo-card h-100 shadow-sm">
+    <div class="photo-wrapper">
+        <a th:href="@{/photos/view/{id}(id=${photo.id})}" class="text-decoration-none">
+            <img th:src="@{/photos/view/{id}/thumbnail(id=${photo.id})}" 
+                 th:alt="${photo.title}"
+                 class="card-img-top"
+                 loading="lazy">
+        </a>
+    </div>
+    <div class="card-body">
+        <h6 class="card-title text-truncate mb-1" th:text="${photo.title}">Titre photo</h6>
+        <p class="card-text small text-muted mb-0">
+            <i class="bi bi-person me-1"></i>
+            <span th:text="${photo.ownerUsername}">Utilisateur</span>
+        </p>
+    </div>
+    <div class="card-footer bg-white border-0 pt-0">
+        <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                <i class="bi bi-calendar me-1"></i>
+                <span th:text="${#temporals.format(photo.createdAt, 'dd/MM/yyyy')}">01/01/2024</span>
+            </small>
+            <div class="text-muted small">
+                <span th:if="${photo.commentCount != null and photo.commentCount > 0}">
+                    <i class="bi bi-chat me-1"></i>
+                    <span th:text="${photo.commentCount}">0</span>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- EMPTY STATE FRAGMENT -->
+<!-- ============================================= -->
+<div th:fragment="emptyState(icon, title, message)" class="text-center py-5">
+    <div class="py-5">
+        <i th:class="'bi bi-' + ${icon} + ' display-1 text-muted'"></i>
+        <h3 class="mt-4 text-muted" th:text="${title}">Aucun élément</h3>
+        <p class="text-muted mb-4" th:text="${message}">Il n'y a rien à afficher pour le moment.</p>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- CONFIRM DELETE MODAL FRAGMENT -->
+<!-- ============================================= -->
+<div th:fragment="deleteModal(modalId, title, message, formAction)" 
+     class="modal fade" th:id="${modalId}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" th:text="${title}">Confirmer la suppression</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p th:text="${message}">Êtes-vous sûr de vouloir supprimer cet élément ?</p>
+                <p class="text-danger small mb-0">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Cette action est irréversible.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form th:action="${formAction}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Supprimer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- HERO SECTION FRAGMENT -->
+<!-- ============================================= -->
+<section th:fragment="hero(title, subtitle)" class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-5 fw-bold mb-3" th:text="${title}">Titre</h1>
+        <p class="lead mb-0" th:text="${subtitle}">Sous-titre</p>
+    </div>
+</section>
+
+</html>

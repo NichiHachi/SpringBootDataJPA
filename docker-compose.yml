@@ -1,0 +1,133 @@
+# FotoShare - Docker Compose 3-Tier Architecture
+# Tier 1: Web (Nginx Reverse Proxy)
+# Tier 2: Application (Spring Boot)
+# Tier 3: Database (MariaDB)
+
+services:
+  # ===========================================
+  # TIER 3: DATABASE (MariaDB)
+  # ===========================================
+  db:
+    build:
+      context: ./docker/db
+      dockerfile: Dockerfile
+    container_name: fotoshare-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MARIADB_DATABASE: fotoshareDB
+      MARIADB_USER: ${DB_USER:-fotoshare}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-fotosharepass}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootpassword}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # ===========================================
+  # TIER 2: APPLICATION (Spring Boot)
+  # ===========================================
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: fotoshare-app
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/fotoshareDB
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-fotoshare}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-fotosharepass}
+      FOTOSHARE_UPLOAD_PATH: /app/uploads/photos
+      FOTOSHARE_THUMBNAIL_PATH: /app/uploads/thumbnails
+      JAVA_OPTS: "-Xms256m -Xmx512m"
+    volumes:
+      - photo_uploads:/app/uploads/photos
+      - photo_thumbnails:/app/uploads/thumbnails
+    networks:
+      - frontend-network
+      - backend-network
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 512M
+
+  # ===========================================
+  # TIER 1: WEB (Nginx Reverse Proxy)
+  # ===========================================
+  web:
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    container_name: fotoshare-web
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-80}:80"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - frontend-network
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
+# ===========================================
+# NETWORKS
+# ===========================================
+networks:
+  # Frontend network: Web <-> App communication
+  frontend-network:
+    driver: bridge
+    name: fotoshare-frontend
+  
+  # Backend network: App <-> DB communication (isolated)
+  backend-network:
+    driver: bridge
+    name: fotoshare-backend
+    internal: true  # No external access to database network
+
+# ===========================================
+# VOLUMES
+# ===========================================
+volumes:
+  db_data:
+    name: fotoshare-db-data
+  photo_uploads:
+    name: fotoshare-uploads
+  photo_thumbnails:
+    name: fotoshare-thumbnails

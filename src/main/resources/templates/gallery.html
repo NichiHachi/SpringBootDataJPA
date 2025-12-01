@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Galerie Publique')}">
+    <title>Galerie Publique - FotoShare</title>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+    <!-- Navigation -->
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-5 fw-bold mb-3">
+                <i class="bi bi-images me-3"></i>Galerie Publique
+            </h1>
+            <p class="lead mb-0">Découvrez les photos partagées par notre communauté</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container pb-5 flex-grow-1">
+        <!-- Stats -->
+        <div class="row mb-4 mt-4" th:if="${photos != null and photos.totalElements > 0}">
+            <div class="col-12">
+                <p class="text-muted">
+                    <i class="bi bi-image me-1"></i>
+                    <span th:text="${photos.totalElements}">0</span> photo(s) publique(s) disponible(s)
+                </p>
+            </div>
+        </div>
+
+        <!-- Photos Grid -->
+        <div class="row g-4" th:if="${photos != null and photos.hasContent()}">
+            <div class="col-sm-6 col-md-4 col-lg-3" th:each="photo : ${photos.content}">
+                <div th:replace="~{fragments/layout :: photoCard(${photo})}"></div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${photos == null or !photos.hasContent()}" class="text-center py-5">
+            <div class="py-5">
+                <i class="bi bi-images display-1 text-muted"></i>
+                <h3 class="mt-4 text-muted">Aucune photo publique</h3>
+                <p class="text-muted mb-4">
+                    Il n'y a pas encore de photos publiques dans la galerie.<br>
+                    Soyez le premier à partager une photo avec la communauté !
+                </p>
+                <div sec:authorize="isAuthenticated()">
+                    <a th:href="@{/photos/upload}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-cloud-upload me-2"></i>Uploader une photo
+                    </a>
+                </div>
+                <div sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/register}" class="btn btn-primary btn-lg me-2">
+                        <i class="bi bi-person-plus me-2"></i>Créer un compte
+                    </a>
+                    <a th:href="@{/login}" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Se connecter
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-5" th:if="${photos != null and photos.totalPages > 1}">
+            <nav th:replace="~{fragments/layout :: pagination(${currentPage}, ${photos.totalPages}, '/gallery')}"></nav>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Mes Albums')}">
+    <title>Mes Albums - FotoShare</title>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+    <!-- Navigation -->
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="container py-4 flex-grow-1">
+        <!-- Alert messages -->
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 th:text="${pageTitle} ?: 'Mes Albums'">Mes Albums</h2>
+                <p class="text-muted mb-0" th:if="${albums != null and albums.totalElements > 0}">
+                    <span th:text="${albums.totalElements}">0</span> album(s)
+                </p>
+            </div>
+            <div>
+                <a th:href="@{/albums/create}" class="btn btn-primary">
+                    <i class="bi bi-folder-plus me-2"></i>Créer un album
+                </a>
+            </div>
+        </div>
+
+        <!-- Albums Grid -->
+        <div class="row g-4" th:if="${albums != null and albums.hasContent()}">
+            <div class="col-6 col-md-4 col-lg-3" th:each="album : ${albums.content}">
+                <div class="card album-card h-100 shadow-sm">
+                    <a th:href="@{/albums/view/{id}(id=${album.id})}" class="text-decoration-none">
+                        <div class="album-cover position-relative">
+                            <i class="bi bi-folder2-open"></i>
+                            <span class="photo-count-badge">
+                                <i class="bi bi-images me-1"></i>
+                                <span th:text="${album.photoCount}">0</span>
+                            </span>
+                        </div>
+                    </a>
+                    <div class="card-body">
+                        <h6 class="card-title text-truncate">
+                            <a th:href="@{/albums/view/{id}(id=${album.id})}" 
+                               class="text-dark text-decoration-none"
+                               th:text="${album.name}">Nom de l'album</a>
+                        </h6>
+                        <p class="card-text small text-muted mb-2" th:if="${album.description}" 
+                           th:text="${#strings.abbreviate(album.description, 50)}">Description...</p>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-calendar me-1"></i>
+                                <span th:text="${#temporals.format(album.createdAt, 'dd/MM/yyyy')}">01/01/2024</span>
+                            </small>
+                            <div class="btn-group btn-group-sm">
+                                <a th:href="@{/albums/view/{id}(id=${album.id})}" 
+                                   class="btn btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a th:href="@{/albums/edit/{id}(id=${album.id})}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-danger" 
+                                        data-bs-toggle="modal" 
+                                        th:data-bs-target="'#deleteModal' + ${album.id}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Modal for each album -->
+                <div class="modal fade" th:id="'deleteModal' + ${album.id}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">Supprimer l'album</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Êtes-vous sûr de vouloir supprimer l'album "<strong th:text="${album.name}">nom</strong>" ?</p>
+                                <div class="alert alert-info small mb-0">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Les photos de l'album ne seront pas supprimées, seulement l'album lui-même.
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                <form th:action="@{/albums/delete/{id}(id=${album.id})}" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="bi bi-trash me-1"></i>Supprimer
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${albums == null or !albums.hasContent()}" class="text-center py-5">
+            <div class="py-5">
+                <i class="bi bi-folder display-1 text-muted"></i>
+                <h3 class="mt-4 text-muted">Aucun album</h3>
+                <p class="text-muted mb-4">Vous n'avez pas encore créé d'album.</p>
+                <a th:href="@{/albums/create}" class="btn btn-primary">
+                    <i class="bi bi-folder-plus me-2"></i>Créer mon premier album
+                </a>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-4" th:if="${albums != null and albums.totalPages > 1}">
+            <nav th:replace="~{fragments/layout :: pagination(${currentPage}, ${albums.totalPages}, '/albums')}"></nav>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+    
+    <style>
+        .album-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .album-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        .album-cover {
+            height: 180px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .album-cover i {
+            font-size: 4rem;
+            opacity: 0.8;
+        }
+        .photo-count-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+    </style>
+</body>
+</html>

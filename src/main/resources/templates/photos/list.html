@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${pageTitle})}">
+    <title>Photos - FotoShare</title>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+    <!-- Navigation -->
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="container py-4 flex-grow-1">
+        <!-- Alert messages -->
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div></div>
+                <h2 th:text="${pageTitle}">Mes Photos</h2>
+                <p class="text-muted mb-0" th:if="${photos != null and photos.totalElements > 0}">
+                    <span th:text="${photos.totalElements}">0</span> photo(s) trouvée(s)
+                </p>
+            </div>
+            <div>
+                <a th:href="@{/photos/upload}" class="btn btn-primary">
+                    <i class="bi bi-cloud-upload me-2"></i>Uploader
+                </a>
+            </div>
+        </div>
+
+        <!-- Search results header -->
+        <div th:if="${searchQuery}" class="alert alert-info d-flex justify-content-between align-items-center">
+            <span></span>
+                <i class="bi bi-search me-2"></i>
+                Résultats pour: <strong th:text="${searchQuery}">recherche</strong>
+            </span>
+            <a th:href="@{/photos/my}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-x me-1"></i>Effacer
+            </a>
+        </div>
+
+        <!-- Photos Grid -->
+        <div class="row g-4" th:if="${photos != null and photos.hasContent()}">
+            <div class="col-6 col-md-4 col-lg-3" th:each="photo : ${photos.content}">
+                <div class="card photo-card h-100 shadow-sm">
+                    <div class="photo-wrapper">
+                        <a th:href="@{/photos/view/{id}(id=${photo.id})}" class="text-decoration-none">
+                            <img th:src="@{/photos/view/{id}/thumbnail(id=${photo.id})}" 
+                                 th:alt="${photo.title}"
+                                 class="card-img-top"
+                                 loading="lazy">
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title text-truncate" th:text="${photo.title}">Titre photo</h6>
+                        <p class="card-text small text-muted mb-2" th:if="${photo.description}" 
+                           th:text="${#strings.abbreviate(photo.description, 50)}">Description...</p>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-calendar me-1"></i>
+                                <span th:text="${#temporals.format(photo.createdAt, 'dd/MM/yyyy')}">01/01/2024</span>
+                            </small>
+                            <span th:if="${photo.visibility.name() == 'PUBLIC'}" class="badge bg-success">
+                                <i class="bi bi-globe"></i>
+                            </span>
+                            <span th:if="${photo.visibility.name() == 'PRIVATE'}" class="badge bg-secondary">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                        </div>
+                        <div class="action-buttons mt-2 d-flex gap-1">
+                            <a th:href="@{/photos/view/{id}(id=${photo.id})}" 
+                               class="btn btn-outline-primary btn-sm flex-grow-1">
+                                <i class="bi bi-eye"></i> Voir
+                            </a>
+                            <a th:href="@{/photos/edit/{id}(id=${photo.id})}" 
+                               class="btn btn-outline-secondary btn-sm"
+                               th:if="${photo.canEdit}">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button type="button" class="btn btn-outline-danger btn-sm" 
+                                    th:if="${photo.canDelete}"
+                                    data-bs-toggle="modal" 
+                                    th:data-bs-target="'#deleteModal' + ${photo.id}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Modal for each photo -->
+                <div class="modal fade" th:id="'deleteModal' + ${photo.id}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">Confirmer la suppression</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Êtes-vous sûr de vouloir supprimer la photo "<span th:text="${photo.title}">titre</span>" ?</p>
+                                <p class="text-danger small mb-0">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Cette action est irréversible.
+                                </p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                <form th:action="@{/photos/delete/{id}(id=${photo.id})}" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="bi bi-trash me-1"></i>Supprimer
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${photos == null or !photos.hasContent()}" class="text-center py-5">
+            <div class="py-5">
+                <i class="bi bi-images display-1 text-muted"></i>
+                <h3 class="mt-4 text-muted">Aucune photo</h3>
+                <p class="text-muted" th:if="${searchQuery}">Aucun résultat pour votre recherche.</p>
+                <p class="text-muted" th:unless="${searchQuery}">Vous n'avez pas encore uploadé de photos.</p>
+                <a th:href="@{/photos/upload}" class="btn btn-primary mt-2" th:unless="${searchQuery}">
+                    <i class="bi bi-cloud-upload me-2"></i>Uploader ma première photo
+                </a>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-4" th:if="${photos != null and photos.totalPages > 1}">
+            <nav th:replace="~{fragments/layout :: pagination(${currentPage}, ${photos.totalPages}, '/photos/my')}"></nav>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

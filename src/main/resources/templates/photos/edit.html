@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Modifier la photo')}">
+    <title>Modifier la photo - FotoShare</title>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+    <!-- Navigation -->
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <!-- Main Content -->
+    <div class="container py-5 flex-grow-1">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a th:href="@{/}">Accueil</a></li>
+                        <li class="breadcrumb-item"><a th:href="@{/photos/my}">Mes Photos</a></li>
+                        <li class="breadcrumb-item"><a th:href="@{/photos/view/{id}(id=${photo.id})}" th:text="${photo.title}">Photo</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Modifier</li>
+                    </ol>
+                </nav>
+
+                <div class="row">
+                    <!-- Photo Preview -->
+                    <div class="col-md-5 mb-4">
+                        <div class="card shadow-sm">
+                            <img th:src="@{/photos/view/{id}/image(id=${photo.id})}" 
+                                 th:alt="${photo.title}"
+                                 class="card-img-top"
+                                 style="max-height: 400px; object-fit: contain; background: #1a1a1a;">
+                            <div class="card-footer bg-white">
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar me-1"></i>
+                                    Uploadée le <span th:text="${#temporals.format(photo.createdAt, 'dd/MM/yyyy à HH:mm')}">01/01/2024</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Form -->
+                    <div class="col-md-7">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h4 class="mb-0">
+                                    <i class="bi bi-pencil-square me-2"></i>Modifier la photo
+                                </h4>
+                            </div>
+                            <div class="card-body p-4">
+                                <!-- Success message -->
+                                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    <span th:text="${successMessage}"></span>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+
+                                <!-- Error message -->
+                                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <span th:text="${errorMessage}"></span>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+
+                                <form th:action="@{/photos/edit/{id}(id=${photo.id})}" method="post">
+                                    <!-- Title -->
+                                    <div class="mb-3">
+                                        <label for="title" class="form-label fw-bold">
+                                            Titre <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" 
+                                               name="title"
+                                               th:value="${photo.title}"
+                                               class="form-control" 
+                                               id="title" 
+                                               placeholder="Donnez un titre à votre photo"
+                                               required
+                                               maxlength="100">
+                                        <div class="form-text">Maximum 100 caractères</div>
+                                    </div>
+
+                                    <!-- Description -->
+                                    <div class="mb-3">
+                                        <label for="description" class="form-label fw-bold">Description</label>
+                                        <textarea name="description"
+                                                  class="form-control" 
+                                                  id="description" 
+                                                  rows="4" 
+                                                  placeholder="Ajoutez une description (optionnel)"
+                                                  maxlength="1000"
+                                                  th:text="${photo.description}"></textarea>
+                                        <div class="form-text">Maximum 1000 caractères</div>
+                                    </div>
+
+                                    <!-- Visibility -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold">Visibilité</label>
+                                        <div class="row g-3">
+                                            <div class="col-6">
+                                                <div class="form-check card p-3 h-100" 
+                                                     th:classappend="${photo.visibility.name() == 'PRIVATE'} ? 'border-primary' : ''">
+                                                    <input class="form-check-input" 
+                                                           type="radio" 
+                                                           name="visibility"
+                                                           value="PRIVATE" 
+                                                           id="visibilityPrivate"
+                                                           th:checked="${photo.visibility.name() == 'PRIVATE'}">
+                                                    <label class="form-check-label w-100" for="visibilityPrivate">
+                                                        <i class="bi bi-lock-fill text-secondary me-2"></i>
+                                                        <strong>Privée</strong>
+                                                        <p class="text-muted small mb-0 mt-1">
+                                                            Visible uniquement par vous et les personnes avec qui vous partagez
+                                                        </p>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="form-check card p-3 h-100"
+                                                     th:classappend="${photo.visibility.name() == 'PUBLIC'} ? 'border-success' : ''">
+                                                    <input class="form-check-input" 
+                                                           type="radio" 
+                                                           name="visibility"
+                                                           value="PUBLIC" 
+                                                           id="visibilityPublic"
+                                                           th:checked="${photo.visibility.name() == 'PUBLIC'}">
+                                                    <label class="form-check-label w-100" for="visibilityPublic">
+                                                        <i class="bi bi-globe text-success me-2"></i>
+                                                        <strong>Publique</strong>
+                                                        <p class="text-muted small mb-0 mt-1">
+                                                            Visible par tout le monde dans la galerie publique
+                                                        </p>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit buttons -->
+                                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                        <a th:href="@{/photos/view/{id}(id=${photo.id})}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-arrow-left me-1"></i>Annuler
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check-lg me-2"></i>Enregistrer
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Danger Zone -->
+                        <div class="card mt-4 border-danger">
+                            <div class="card-header bg-danger text-white">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>Zone de danger
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-3">
+                                    La suppression de cette photo est irréversible. Toutes les données associées 
+                                    (commentaires, partages) seront également supprimées.
+                                </p>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                    <i class="bi bi-trash me-1"></i>Supprimer cette photo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Confirmer la suppression
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir supprimer la photo "<strong th:text="${photo.title}">Photo</strong>" ?</p>
+                    <p class="text-danger small mb-0">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        Cette action est irréversible. La photo et tous ses commentaires seront définitivement supprimés.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <form th:action="@{/photos/delete/{id}(id=${photo.id})}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>Supprimer définitivement
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+    <script>
+        // Highlight selected visibility card
+        document.querySelectorAll('input[name="visibility"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.form-check.card').forEach(card => {
+                    card.classList.remove('border-primary', 'border-success');
+                });
+                if (this.value === 'PRIVATE') {
+                    this.closest('.card').classList.add('border-primary');
+                } else if (this.value === 'PUBLIC') {
+                    this.closest('.card').classList.add('border-success');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

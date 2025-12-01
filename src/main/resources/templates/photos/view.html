@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${photo.title} + ' - FotoShare'">Photo - FotoShare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .photo-container {
+            background: #1a1a1a;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .photo-container img {
+            max-height: 70vh;
+            width: 100%;
+            object-fit: contain;
+        }
+        .comment-card {
+            border-left: 3px solid #667eea;
+        }
+        .share-badge {
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/}">
+                <i class="bi bi-camera-fill me-2"></i>FotoShare
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" th:href="@{/}">Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/photos/my}">Mes Photos</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/albums}">Mes Albums</a></li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>
+                            <span sec:authentication="name">Utilisateur</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" th:href="@{/photos/upload}"><i class="bi bi-cloud-upload me-2"></i>Uploader</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post">
+                                    <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Déconnexion</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <!-- Alert messages -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i><span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i><span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/}">Accueil</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/photos/my}">Mes Photos</a></li>
+                <li class="breadcrumb-item active" th:text="${photo.title}">Photo</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <!-- Main Photo Column -->
+            <div class="col-lg-8">
+                <!-- Photo Display -->
+                <div class="card shadow-sm mb-4">
+                    <div class="photo-container">
+                        <img th:src="@{/photos/view/{id}/image(id=${photo.id})}" 
+                             th:alt="${photo.title}" 
+                             class="img-fluid">
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div></div>
+                                <h3 th:text="${photo.title}">Titre de la photo</h3>
+                                <p class="text-muted" th:if="${photo.description}" th:text="${photo.description}">Description</p>
+                            </div>
+                            <span th:if="${photo.visibility.name() == 'PUBLIC'}" class="badge bg-success">
+                                <i class="bi bi-globe me-1"></i>Public
+                            </span>
+                            <span th:if="${photo.visibility.name() == 'PRIVATE'}" class="badge bg-secondary">
+                                <i class="bi bi-lock me-1"></i>Privé
+                            </span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-muted small">
+                                <i class="bi bi-person me-1"></i>
+                                <span th:text="${photo.ownerUsername}">Propriétaire</span>
+                                <span class="mx-2">|</span>
+                                <i class="bi bi-calendar me-1"></i>
+                                <span th:text="${#temporals.format(photo.createdAt, 'dd MMMM yyyy à HH:mm')}">Date</span>
+                            </div>
+                            <!-- Action buttons -->
+                            <div class="btn-group" th:if="${canEdit or canDelete}">
+                                <a th:href="@{/photos/edit/{id}(id=${photo.id})}" class="btn btn-outline-primary btn-sm" th:if="${canEdit}">
+                                    <i class="bi bi-pencil me-1"></i>Modifier
+                                </a>
+                                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal" th:if="${canDelete}">
+                                    <i class="bi bi-trash me-1"></i>Supprimer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comments Section -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-chat-dots me-2"></i>Commentaires
+                            <span class="badge bg-primary ms-2" th:text="${comments.totalElements}">0</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Add comment form -->
+                        <form th:if="${canComment}" th:action="@{/photos/comment/{id}(id=${photo.id})}" method="post" class="mb-4">
+                            <div class="mb-3">
+                                <textarea name="text" class="form-control" rows="3" placeholder="Ajouter un commentaire..." required maxlength="2000"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-1"></i>Publier
+                            </button>
+                        </form>
+                        <div th:unless="${canComment}" class="alert alert-info mb-4">
+                            <i class="bi bi-info-circle me-2"></i>Vous devez avoir la permission de commenter pour ajouter un commentaire.
+                        </div>
+
+                        <!-- Comments list -->
+                        <div th:if="${comments != null and comments.hasContent()}">
+                            <div th:each="comment : ${comments.content}" class="card comment-card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong th:text="${comment.authorUsername}">Auteur</strong>
+                                            <small class="text-muted ms-2" th:text="${#temporals.format(comment.createdAt, 'dd/MM/yyyy HH:mm')}">Date</small>
+                                        </div>
+                                        <form th:action="@{/photos/comment/{photoId}/delete/{commentId}(photoId=${photo.id}, commentId=${comment.id})}" method="post" sec:authorize="isAuthenticated()">
+                                            <button type="submit" class="btn btn-sm btn-link text-danger p-0" onclick="return confirm('Supprimer ce commentaire ?');">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <p class="mb-0 mt-2" th:text="${comment.text}">Contenu du commentaire</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:unless="${comments != null and comments.hasContent()}" class="text-center text-muted py-4">
+                            <i class="bi bi-chat display-4"></i>
+                            <p class="mt-2">Aucun commentaire pour le moment.</p>
+                        </div>
+
+                        <!-- Comments pagination -->
+                        <nav th:if="${comments != null and comments.totalPages > 1}" class="mt-3">
+                            <ul class="pagination pagination-sm justify-content-center">
+                                <li class="page-item" th:classappend="${commentPage == 0} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/photos/view/{id}(id=${photo.id}, commentPage=${commentPage - 1})}">Préc</a>
+                                </li>
+                                <li class="page-item" th:each="i : ${#numbers.sequence(0, comments.totalPages - 1)}" th:classappend="${i == commentPage} ? 'active'">
+                                    <a class="page-link" th:href="@{/photos/view/{id}(id=${photo.id}, commentPage=${i})}" th:text="${i + 1}">1</a>
+                                </li>
+                                <li class="page-item" th:classappend="${commentPage == comments.totalPages - 1} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/photos/view/{id}(id=${photo.id}, commentPage=${commentPage + 1})}">Suiv</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Share Section -->
+                <div class="card shadow-sm mb-4" th:if="${canShare}">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-share me-2"></i>Partager</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Share form -->
+                        <form th:action="@{/photos/share/{id}(id=${photo.id})}" method="post" th:if="${availableUsers != null and !availableUsers.isEmpty()}">
+                            <div class="mb-3">
+                                <label class="form-label">Partager avec</label>
+                                <select name="userId" class="form-select" required>
+                                    <option value="">Sélectionner un utilisateur...</option>
+                                    <option th:each="user : ${availableUsers}" th:value="${user.id}" th:text="${user.username}">User</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Permission</label>
+                                <select name="permission" class="form-select" required>
+                                    <option th:each="level : ${permissionLevels}" th:value="${level}" th:text="${level}">Level</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-plus-circle me-1"></i>Partager
+                            </button>
+                        </form>
+
+                        <!-- Current shares -->
+                        <div th:if="${shares != null and !shares.isEmpty()}" class="mt-4">
+                            <h6>Partagée avec:</h6>
+                            <ul class="list-group">
+                                <li th:each="share : ${shares}" class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-person me-2"></i>
+                                        <span th:text="${share.username}">User</span>
+                                        <span class="badge bg-info share-badge ms-2" th:text="${share.permissionLevel}">READ</span>
+                                    </div>
+                                    <form th:action="@{/photos/share/{id}/remove(id=${photo.id})}" method="post" class="d-inline">
+                                        <input type="hidden" name="userId" th:value="${share.userId}">
+                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Photo Info -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informations</h5>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Fichier original</span>
+                            <span th:text="${photo.originalFilename}">photo.jpg</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Type</span>
+                            <span th:text="${photo.contentType}">image/jpeg</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Commentaires</span>
+                            <span th:text="${photo.commentCount}">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Partages</span>
+                            <span th:text="${photo.shareCount}">0</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Back button -->
+                <div class="d-grid mt-4">
+                    <a th:href="@{/photos/my}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Retour à mes photos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmer la suppression</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir supprimer "<span th:text="${photo.title}">titre</span>" ?</p>
+                    <p class="text-danger small mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Cette action est irréversible.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <form th:action="@{/photos/delete/{id}(id=${photo.id})}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>Supprimer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white py-3 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 FotoShare. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
