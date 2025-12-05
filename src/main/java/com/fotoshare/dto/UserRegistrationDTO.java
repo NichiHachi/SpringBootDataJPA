@@ -29,7 +29,7 @@ public class UserRegistrationDTO {
     @NotBlank(message = "Le mot de passe est obligatoire")
     @Size(min = 8, max = 100, message = "Le mot de passe doit contenir entre 8 et 100 caractères")
     @Pattern(
-        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
+        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d]).{8,}$",
         message = "Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial"
     )
     private String password;

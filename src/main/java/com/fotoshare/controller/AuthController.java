@@ -105,6 +105,9 @@ public class AuthController {
         // Check for validation errors
         if (bindingResult.hasErrors()) {
             logger.warn("Registration validation failed for: {}", registrationDTO.getUsername());
+            bindingResult.getAllErrors().forEach(error -> {
+                logger.warn("Validation error: {}", error.getDefaultMessage());
+            });
             return "register";
         }
 
