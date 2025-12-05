@@ -82,5 +82,5 @@ CREATE TABLE IF NOT EXISTS commentaire (
 -- Insertion d'un utilisateur admin par défaut
 -- Mot de passe: Admin123! (hashé avec BCrypt)
 INSERT INTO utilisateur (username, email, password_hash, role, enabled) VALUES
-('admin', 'admin@fotoshare.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZRGlqKWB4VaQxKjFQFyq6O/MNz2Iy', 'ADMIN', TRUE)
+('admin', 'admin@fotoshare.com', '$2y$10$x9w1iR7vu3/jphkN0AHi6e336GCi4wkdrSl7gA6.tsbN0ePwlUe7e', 'ADMIN', TRUE)
 ON DUPLICATE KEY UPDATE id=id;
