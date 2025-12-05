@@ -50,10 +50,14 @@ public class AdminController {
     // =========================================
 
     /**
-     * Display the admin dashboard with statistics.
+     * Display the admin dashboard with statistics and user list.
      */
     @GetMapping({"", "/", "/dashboard"})
-    public String dashboard(Model model) {
+    public String dashboard(Model model,
+                           @RequestParam(defaultValue = "0") int page,
+                           @RequestParam(defaultValue = "20") int size,
+                           @RequestParam(required = false) String search,
+                           @RequestParam(required = false) String status) {
         // User statistics
         long totalUsers = userService.getTotalUserCount();
         long activeUsers = userService.getActiveUserCount();
@@ -66,23 +70,7 @@ public class AdminController {
         model.addAttribute("adminCount", adminCount);
         model.addAttribute("moderatorCount", moderatorCount);
 
-        return "admin/dashboard";
-    }
-
-    // =========================================
-    // USER MANAGEMENT
-    // =========================================
-
-    /**
-     * Display the user list with pagination and filtering.
-     */
-    @GetMapping("/users")
-    public String listUsers(Model model,
-                           @RequestParam(defaultValue = "0") int page,
-                           @RequestParam(defaultValue = "20") int size,
-                           @RequestParam(required = false) String search,
-                           @RequestParam(required = false) String status) {
-
+        // User list with pagination and filtering
         size = Math.min(size, 100);
         Page<UserDTO> users;
 
@@ -104,7 +92,19 @@ public class AdminController {
         model.addAttribute("status", status);
         model.addAttribute("roles", Role.values());
 
-        return "admin/users";
+        return "admin/dashboard";
+    }
+
+    // =========================================
+    // USER MANAGEMENT
+    // =========================================
+
+    /**
+     * Redirect to dashboard (user list is now integrated in dashboard).
+     */
+    @GetMapping("/users")
+    public String listUsers() {
+        return "redirect:/admin/dashboard";
     }
 
     /**
@@ -148,7 +148,7 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
 
-        return "redirect:/admin/users";
+        return "redirect:/admin/dashboard";
     }
 
     /**
@@ -167,7 +167,7 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("errorMessage", "Utilisateur non trouvé");
         }
 
-        return "redirect:/admin/users/" + id;
+        return "redirect:/admin/dashboard";
     }
 
     /**
@@ -186,7 +186,7 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("errorMessage", "Utilisateur non trouvé");
         }
 
-        return "redirect:/admin/users/" + id;
+        return "redirect:/admin/dashboard";
     }
 
     /**
@@ -215,7 +215,7 @@ public class AdminController {
                     "Erreur lors de la modification du rôle");
         }
 
-        return "redirect:/admin/users/" + id;
+        return "redirect:/admin/dashboard";
     }
 
     /**
@@ -252,7 +252,7 @@ public class AdminController {
                     "Erreur lors de la suppression de l'utilisateur");
         }
 
-        return "redirect:/admin/users";
+        return "redirect:/admin/dashboard";
     }
 
     // =========================================

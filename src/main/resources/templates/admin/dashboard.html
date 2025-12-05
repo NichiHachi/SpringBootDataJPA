@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments/layout :: head('Admin - Utilisateurs')}">
-    <title>Gestion des utilisateurs - FotoShare Admin</title>
+<head th:replace="~{fragments/layout :: head('Admin Dashboard')}">
+    <title>Admin Dashboard - FotoShare</title>
 </head>
 <body class="bg-light d-flex flex-column min-vh-100">
     <!-- Navigation -->
@@ -42,6 +42,12 @@
         .table-hover tbody tr:hover {
             background-color: rgba(102, 126, 234, 0.1);
         }
+        .stat-card {
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
     </style>
 
     <div class="container-fluid">
@@ -50,13 +56,8 @@
             <nav class="col-md-3 col-lg-2 d-md-block sidebar py-3">
                 <ul class="nav flex-column">
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/admin/dashboard}">
+                        <a class="nav-link active" th:href="@{/admin/dashboard}">
                             <i class="bi bi-speedometer2"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" th:href="@{/admin/users}">
-                            <i class="bi bi-people"></i>Utilisateurs
                         </a>
                     </li>
                     <li class="nav-item">
@@ -83,20 +84,62 @@
 
                 <!-- Page Header -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div></div>
-                        <h2></h2><i class="bi bi-people me-2"></i>Gestion des utilisateurs</h2>
-                        <p class="text-muted mb-0">
-                            <span th:text="${users.totalElements}">0</span> utilisateur(s) au total
-                        </p>
+                    <div>
+                        <h2><i class="bi bi-shield-check me-2"></i>Administration</h2>
+                        <p class="text-muted mb-0">Gestion de la plateforme FotoShare</p>
                     </div>
                 </div>
 
-                <!-- Filters -->
+                <!-- Statistics Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="card stat-card shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="bi bi-people text-primary mb-2" style="font-size: 2rem;"></i>
+                                <h3 class="mb-0" th:text="${totalUsers}">0</h3>
+                                <p class="text-muted mb-0 small">Total Utilisateurs</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="bi bi-check-circle text-success mb-2" style="font-size: 2rem;"></i>
+                                <h3 class="mb-0 text-success" th:text="${activeUsers}">0</h3>
+                                <p class="text-muted mb-0 small">Actifs</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="bi bi-x-circle text-warning mb-2" style="font-size: 2rem;"></i>
+                                <h3 class="mb-0 text-warning" th:text="${inactiveUsers}">0</h3>
+                                <p class="text-muted mb-0 small">Inactifs</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="bi bi-shield-fill-check text-danger mb-2" style="font-size: 2rem;"></i>
+                                <h3 class="mb-0 text-danger" th:text="${adminCount}">0</h3>
+                                <p class="text-muted mb-0 small">Admins</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Management Section -->
                 <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-people me-2"></i>Gestion des Utilisateurs</h5>
+                    </div>
                     <div class="card-body">
-                        <form th:action="@{/admin/users}" method="get" class="row g-3 align-items-end">
+                        <!-- Filters -->
+                        <form th:action="@{/admin/dashboard}" method="get" class="row g-3 mb-3">
                             <div class="col-md-4">
-                                <label class="form-label">Rechercher</label>
+                                <label class="form-label small">Rechercher</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-search"></i></span>
                                     <input type="text" name="search" class="form-control" 
@@ -104,7 +147,7 @@
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Statut</label>
+                                <label class="form-label small">Statut</label>
                                 <select name="status" class="form-select">
                                     <option value="">Tous</option>
                                     <option value="enabled" th:selected="${status == 'enabled'}">Actifs</option>
@@ -112,12 +155,14 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
+                                <label class="form-label small">&nbsp;</label>
                                 <button type="submit" class="btn btn-primary w-100">
                                     <i class="bi bi-filter me-1"></i>Filtrer
                                 </button>
                             </div>
-                            <div class="col-md-2">
-                                <a th:href="@{/admin/users}" class="btn btn-outline-secondary w-100">
+                            <div class="col-md-3">
+                                <label class="form-label small">&nbsp;</label>
+                                <a th:href="@{/admin/dashboard}" class="btn btn-outline-secondary w-100">
                                     <i class="bi bi-x-circle me-1"></i>Réinitialiser
                                 </a>
                             </div>
@@ -195,18 +240,18 @@
                 <nav th:if="${users != null and users.totalPages > 1}" class="mt-4">
                     <ul class="pagination justify-content-center">
                         <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                            <a class="page-link" th:href="@{/admin/users(page=${currentPage - 1}, search=${search}, status=${status})}">
+                            <a class="page-link" th:href="@{/admin/dashboard(page=${currentPage - 1}, search=${search}, status=${status})}">
                                 <i class="bi bi-chevron-left"></i> Précédent
                             </a>
                         </li>
                         <li class="page-item" th:each="i : ${#numbers.sequence(0, users.totalPages - 1)}"
                             th:if="${i == 0 or i == users.totalPages - 1 or (i >= currentPage - 2 and i <= currentPage + 2)}"
                             th:classappend="${i == currentPage} ? 'active'">
-                            <a class="page-link" th:href="@{/admin/users(page=${i}, search=${search}, status=${status})}" 
+                            <a class="page-link" th:href="@{/admin/dashboard(page=${i}, search=${search}, status=${status})}" 
                                th:text="${i + 1}">1</a>
                         </li>
                         <li class="page-item" th:classappend="${currentPage == users.totalPages - 1} ? 'disabled'">
-                            <a class="page-link" th:href="@{/admin/users(page=${currentPage + 1}, search=${search}, status=${status})}">
+                            <a class="page-link" th:href="@{/admin/dashboard(page=${currentPage + 1}, search=${search}, status=${status})}">
                                 Suivant <i class="bi bi-chevron-right"></i>
                             </a>
                         </li>
