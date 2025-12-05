@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,12 +32,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 4. Orphaned entities are properly removed
  */
 @SpringBootTest
+@ActiveProfiles("test")
 @TestPropertySource(properties = {
     "fotoshare.upload.path=target/test-uploads/photos",
     "fotoshare.thumbnail.path=target/test-uploads/thumbnails"
 })
 @Transactional
-class UserCascadeDeletionIntegrationTest {
+public class UserCascadeDeletionIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
