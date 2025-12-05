@@ -5,7 +5,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -24,6 +26,8 @@ import java.util.Set;
     @Index(name = "idx_photo_visibility", columnList = "visibility")
 })
 @Data
+@EqualsAndHashCode(exclude = {"albums", "shares", "comments", "owner"})
+@ToString(exclude = {"albums", "shares", "comments", "owner"})
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

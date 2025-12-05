@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 
@@ -18,6 +20,8 @@ import java.time.LocalDateTime;
     @Index(name = "idx_commentaire_author", columnList = "author_id")
 })
 @Data
+@EqualsAndHashCode(exclude = {"photo", "author"})
+@ToString(exclude = {"photo", "author"})
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
