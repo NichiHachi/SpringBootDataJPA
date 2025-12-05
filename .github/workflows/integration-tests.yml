@@ -2,15 +2,15 @@ name: Integration Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, projet-final ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, projet-final ]
 
 jobs:
   integration-tests:
     name: Run Integration Tests
     runs-on: ubuntu-latest
-    
+
     services:
       mariadb:
         image: mariadb:10.11
@@ -83,7 +83,7 @@ jobs:
             const testResults = fs.existsSync('target/surefire-reports')
               ? 'Test results uploaded as artifact'
               : 'No test results found';
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -94,7 +94,7 @@ jobs:
   docker-integration-tests:
     name: Run Tests in Docker
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -131,7 +131,7 @@ jobs:
   code-coverage:
     name: Generate Code Coverage
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
