@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Créer un Album')}">
+    <title>Créer un Album - FotoShare</title>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+    <!-- Navigation -->
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="container py-4 flex-grow-1">
+        <!-- Alert messages -->
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <!-- Page Header -->
+        <div class="mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">Accueil</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/albums}">Albums</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Créer un album</li>
+                </ol>
+            </nav>
+            <h2><i class="bi bi-folder-plus me-2"></i>Créer un nouvel album</h2>
+            <p class="text-muted">Organisez vos photos dans un album</p>
+        </div>
+
+        <!-- Album Creation Form -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <form th:action="@{/albums/create}" 
+                              th:object="${albumDTO}" 
+                              method="post"
+                              class="needs-validation" 
+                              novalidate>
+                            
+                            <!-- Album Name -->
+                            <div class="mb-4">
+                                <label for="name" class="form-label fw-bold">
+                                    Nom de l'album <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="form-control form-control-lg" 
+                                       id="name"
+                                       th:field="*{name}"
+                                       th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
+                                       placeholder="Ex: Vacances d'été 2024"
+                                       maxlength="100"
+                                       required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">
+                                    Erreur sur le nom
+                                </div>
+                                <div class="invalid-feedback" th:unless="${#fields.hasErrors('name')}">
+                                    Veuillez saisir un nom pour l'album
+                                </div>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Maximum 100 caractères
+                                </div>
+                            </div>
+
+                            <!-- Album Description -->
+                            <div class="mb-4">
+                                <label for="description" class="form-label fw-bold">
+                                    Description
+                                </label>
+                                <textarea class="form-control" 
+                                          id="description"
+                                          th:field="*{description}"
+                                          th:classappend="${#fields.hasErrors('description')} ? 'is-invalid'"
+                                          rows="4"
+                                          placeholder="Décrivez votre album (optionnel)"
+                                          maxlength="500"></textarea>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">
+                                    Erreur sur la description
+                                </div>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Maximum 500 caractères - Optionnel
+                                </div>
+                            </div>
+
+                            <!-- Info Box -->
+                            <div class="alert alert-info mb-4">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="bi bi-lightbulb fs-4"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="alert-heading mb-2">À propos des albums</h6>
+                                        <ul class="mb-0 small">
+                                            <li>Vous pourrez ajouter des photos après la création de l'album</li>
+                                            <li>Les albums vous permettent d'organiser vos photos par thème</li>
+                                            <li>Vous pourrez modifier ou supprimer l'album à tout moment</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a th:href="@{/albums}" class="btn btn-outline-secondary px-4">
+                                    <i class="bi bi-x-circle me-2"></i>Annuler
+                                </a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-check-circle me-2"></i>Créer l'album
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Additional Tips Card -->
+                <div class="card mt-4 border-0 bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3">
+                            <i class="bi bi-question-circle me-2"></i>Conseils
+                        </h6>
+                        <ul class="small mb-0">
+                            <li class="mb-2">Choisissez un nom descriptif pour retrouver facilement votre album</li>
+                            <li class="mb-2">La description peut inclure des détails comme la date, le lieu ou le contexte</li>
+                            <li class="mb-0">Vous pouvez créer autant d'albums que vous le souhaitez</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+    <script>
+        // Bootstrap form validation
+        (function() {
+            'use strict';
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+
+        // Character counter for name
+        const nameInput = document.getElementById('name');
+        const descriptionInput = document.getElementById('description');
+
+        if (nameInput) {
+            nameInput.addEventListener('input', function() {
+                const remaining = 100 - this.value.length;
+                const helpText = this.nextElementSibling;
+                if (helpText && helpText.classList.contains('form-text')) {
+                    helpText.innerHTML = '<i class="bi bi-info-circle me-1"></i>Maximum 100 caractères (' + remaining + ' restants)';
+                }
+            });
+        }
+
+        if (descriptionInput) {
+            descriptionInput.addEventListener('input', function() {
+                const remaining = 500 - this.value.length;
+                const helpText = this.nextElementSibling;
+                if (helpText && helpText.classList.contains('form-text')) {
+                    helpText.innerHTML = '<i class="bi bi-info-circle me-1"></i>Maximum 500 caractères (' + remaining + ' restants)';
+                }
+            });
+        }
+    </script>
+
+    <style>
+        .card {
+            border-radius: 12px;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .alert-info {
+            background-color: #e7f3ff;
+            border-color: #b3d9ff;
+            color: #004085;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #63408a 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</body>
+</html>

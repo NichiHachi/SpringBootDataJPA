@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Résultats de recherche')}">
+    <title>Résultats de recherche - FotoShare</title>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+    <!-- Navigation -->
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="container py-4 flex-grow-1">
+        <!-- Alert messages -->
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <!-- Page Header -->
+        <div class="mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">Accueil</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/albums}">Albums</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Recherche</li>
+                </ol>
+            </nav>
+            <h2>
+                <i class="bi bi-search me-2"></i>
+                Résultats de recherche pour "<span th:text="${searchQuery}">recherche</span>"
+            </h2>
+            <p class="text-muted mb-0" th:if="${albums != null and !albums.isEmpty()}">
+                <span th:text="${albums.size()}">0</span> album(s) trouvé(s)
+            </p>
+        </div>
+
+        <!-- Search Form -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <form th:action="@{/albums/search}" method="get" class="row g-3">
+                    <div class="col-md-10">
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="q" 
+                                   th:value="${searchQuery}"
+                                   placeholder="Rechercher des albums..."
+                                   required>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            Rechercher
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        <div class="row g-4" th:if="${albums != null and !albums.isEmpty()}">
+            <div class="col-6 col-md-4 col-lg-3" th:each="album : ${albums}">
+                <div class="card album-card h-100 shadow-sm">
+                    <a th:href="@{/albums/view/{id}(id=${album.id})}" class="text-decoration-none">
+                        <div class="album-cover position-relative">
+                            <i class="bi bi-folder2-open"></i>
+                            <span class="photo-count-badge">
+                                <i class="bi bi-images me-1"></i>
+                                <span th:text="${album.photoCount}">0</span>
+                            </span>
+                        </div>
+                    </a>
+                    <div class="card-body">
+                        <h6 class="card-title text-truncate">
+                            <a th:href="@{/albums/view/{id}(id=${album.id})}" 
+                               class="text-dark text-decoration-none"
+                               th:text="${album.name}">Nom de l'album</a>
+                        </h6>
+                        <p class="card-text small text-muted mb-2" th:if="${album.description}" 
+                           th:text="${#strings.abbreviate(album.description, 50)}">Description...</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-person me-1"></i>
+                                <span th:text="${album.ownerUsername}">username</span>
+                            </small>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar me-1"></i>
+                                <span th:text="${#temporals.format(album.createdAt, 'dd/MM/yyyy')}">01/01/2024</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Results -->
+        <div th:if="${albums == null or albums.isEmpty()}" class="text-center py-5">
+            <div class="py-5">
+                <i class="bi bi-search display-1 text-muted"></i>
+                <h3 class="mt-4 text-muted">Aucun résultat trouvé</h3>
+                <p class="text-muted mb-4">
+                    Aucun album ne correspond à votre recherche "<strong th:text="${searchQuery}">recherche</strong>".
+                </p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a th:href="@{/albums}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left me-2"></i>Retour aux albums
+                    </a>
+                    <a th:href="@{/albums/create}" class="btn btn-primary">
+                        <i class="bi bi-folder-plus me-2"></i>Créer un album
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to Albums -->
+        <div class="mt-4" th:if="${albums != null and !albums.isEmpty()}">
+            <a th:href="@{/albums}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour à tous les albums
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+    
+    <style>
+        .album-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .album-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        .album-cover {
+            height: 180px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .album-cover i {
+            font-size: 4rem;
+            opacity: 0.8;
+        }
+        .photo-count-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        .input-group-text {
+            border-right: none;
+        }
+        .input-group .form-control {
+            border-left: none;
+        }
+        .input-group .form-control:focus {
+            border-color: #ced4da;
+            box-shadow: none;
+        }
+    </style>
+</body>
+</html>
