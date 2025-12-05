@@ -185,18 +185,14 @@ public class PhotoController {
             
         } catch (IllegalArgumentException e) {
             logger.warn("Upload validation failed: {}", e.getMessage());
-            model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("albums", albumService.getMyAlbumsList(authentication));
-            model.addAttribute("visibilityOptions", Visibility.values());
-            return "photos/upload";
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/photos/upload";
             
         } catch (IOException e) {
             logger.error("Upload IO error: {}", e.getMessage(), e);
-            model.addAttribute("errorMessage", 
+            redirectAttributes.addFlashAttribute("error", 
                     "Erreur lors de l'enregistrement du fichier. Veuillez réessayer.");
-            model.addAttribute("albums", albumService.getMyAlbumsList(authentication));
-            model.addAttribute("visibilityOptions", Visibility.values());
-            return "photos/upload";
+            return "redirect:/photos/upload";
         }
     }
 
