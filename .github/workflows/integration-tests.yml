@@ -1,0 +1,174 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  integration-tests:
+    name: Run Integration Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: fotoshare_test
+          MYSQL_USER: fotoshare
+          MYSQL_PASSWORD: fotoshare123
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Create upload directories
+        run: |
+          mkdir -p target/test-uploads/photos
+          mkdir -p target/test-uploads/thumbnails
+
+      - name: Run integration tests
+        run: mvn test -Dtest="*IntegrationTest" -B
+        env:
+          SPRING_PROFILES_ACTIVE: test
+
+      - name: Generate test report
+        if: always()
+        run: |
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f target/surefire-reports/*.txt ]; then
+            cat target/surefire-reports/*.txt | grep -E "Tests run:" >> $GITHUB_STEP_SUMMARY || true
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            target/surefire-reports/
+            target/test-uploads/
+
+      - name: Publish test report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Integration Test Results
+          path: target/surefire-reports/*.xml
+          reporter: java-junit
+
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const testResults = fs.existsSync('target/surefire-reports')
+              ? 'Test results uploaded as artifact'
+              : 'No test results found';
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Integration Test Results\n\n${testResults}\n\nCheck the Actions tab for detailed results.`
+            });
+
+  docker-integration-tests:
+    name: Run Tests in Docker
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker images
+        run: docker compose build
+
+      - name: Start services
+        run: docker compose up -d
+
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for services to be healthy..."
+          timeout 120 bash -c 'until docker compose ps app | grep -q "healthy"; do sleep 2; done'
+
+      - name: Run integration tests in Docker
+        run: docker compose exec -T app mvn test -Dtest="*IntegrationTest"
+
+      - name: Show container logs
+        if: always()
+        run: |
+          echo "=== App Logs ==="
+          docker compose logs app
+          echo "=== DB Logs ==="
+          docker compose logs db
+
+      - name: Stop services
+        if: always()
+        run: docker compose down -v
+
+  code-coverage:
+    name: Generate Code Coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run tests with coverage
+        run: mvn test -Dtest="*IntegrationTest" jacoco:report
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./target/site/jacoco/jacoco.xml
+          flags: integration-tests
+          name: integration-tests-coverage
+
+      - name: Generate coverage badge
+        if: github.ref == 'refs/heads/main'
+        run: |
+          coverage=$(grep -oP 'Total.*?([0-9]+)%' target/site/jacoco/index.html | grep -oP '[0-9]+' | head -1)
+          echo "Coverage: ${coverage}%"
+          echo "COVERAGE=${coverage}" >> $GITHUB_ENV
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const coverage = process.env.COVERAGE || 'N/A';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Code Coverage\n\nIntegration tests coverage: **${coverage}%**`
+            });
